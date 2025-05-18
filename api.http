@@ -1,0 +1,63 @@
+### Environment Variables
+@baseUrl = http://localhost:6000/v1
+@devApiKey = ema_aria_inc
+@accessToken=
+@refreshToken=
+
+### Create Admin (Protected by Dev API Key)
+# @name createAdmin
+POST {{baseUrl}}/admins
+Content-Type: application/json
+X-API-KEY: {{devApiKey}}
+
+{
+    "email": "admin@example.com",
+    "name": "admin",
+    "password": "secure_password"
+}
+
+### Admin Sign In
+# @name signIn
+POST {{baseUrl}}/admins/sign-in
+Content-Type: application/json
+
+{
+    "email": "admin@example.com",
+    "password": "secure_password"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("accessToken", response.body["access-token"]);
+        client.global.set("refreshToken", response.body["refresh-token"]);
+        client.log("Tokens stored successfully");
+    }
+%}
+
+### Get New Access Token
+# @name refreshAccessToken
+POST {{baseUrl}}/admins/access-token
+Content-Type: application/json
+
+{
+    "refreshToken": "{{refreshToken}}"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("accessToken", response.body["access-token"]);
+        client.log("Access token refreshed successfully");
+    }
+%}
+
+### Get Admin Users (Protected by Admin Authentication)
+# @name getAdmins
+GET {{baseUrl}}/admins
+Authorization: Bearer {{accessToken}}
+
+> {%
+    if (response.status === 200) {
+        client.log("Successfully retrieved admin users");
+        client.log(`Total admins: ${response.body.total}`);
+    }
+%}
